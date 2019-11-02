@@ -179,9 +179,9 @@ H_Alum_anal = (V_Alum*A_Alum*10^-3) / ( pi*(diameter/2)^2*k_Alum ); % analytical
 H_Brass_anal = (V_Brass*A_Brass*10^-3) / ( pi*(diameter/2)^2*k_Brass ); % analytical H.
 
 
-H_Steel = [ H_Steel_exp ; H_Steel_anal].*0.0254;
-H_Alum = [ H_Alum_exp ; H_Alum_anal ].*0.0254;
-H_Brass = [ H_Brass_exp ; H_Brass_anal].*0.0254;
+H_Steel = [ H_Steel_exp ; H_Steel_anal]./0.0254;
+H_Alum = [ H_Alum_exp ; H_Alum_anal ]./0.0254;
+H_Brass = [ H_Brass_exp ; H_Brass_anal]./0.0254;
 Names = { 'Experimental';'Analytical' };
 
 table(Names,H_Steel,H_Alum,H_Brass)
@@ -202,9 +202,9 @@ syms n t
 alpha = 4.819e-5;
 
 times = linspace(time_Alum(1),time_Alum(end),30); % time array
-fourier_n = 8; % number  of fourier terms.
+fourier_n = 20; % number  of fourier terms.
 
-x_loc = [ 0 loc ] ;
+x_loc = [ 0 loc ].*0.0254 ;
 
 
 for i = 1:length(times)
@@ -214,27 +214,215 @@ for i = 1:length(times)
             
 % lambda_n = ((2*(k)-1)*pi)/(2*L) ;
 % bn = ((-1).^(k) *8*H*L) / (( 2*(k) - 1) .^2 * pi^2);
-fourier_loop = 0;
+fourier_loop_analytical = 0;
+fourier_loop_exp = 0;
 
 for f = 1:fourier_n
     
-lambda_n = ((2*(f)-1)*pi)/(2*L) ;
-bn = ((-1).^(f) *8*H_Alum_anal*L) / (( 2*(f) - 1) .^2 * pi^2);
+lambda_n_analytical = ((2*(f)-1)*pi)/(2*L.*0.0254) ;
+bn_analytical = ((-1).^(f) *8*H_Alum(1)*L*0.0254) / (( 2*(f) - 1) .^2 * pi^2);
 
-    
-   fourier_loop = fourier_loop + bn.*sin( lambda_n*x_loc(j) ) * exp(- ((lambda_n)^2) *alpha * times(i)) ;
-    
+lambda_n_exp = ((2*(f)-1)*pi)/(2*L.*0.0254) ;
+bn_exp = ((-1).^(f) *8*H_Alum(2)*L*0.0254) / (( 2*(f) - 1) .^2 * pi^2);
+
+   fourier_loop_analytical = fourier_loop_analytical + bn_analytical.*sin( lambda_n_analytical*x_loc(j) ) * exp(- ((lambda_n_analytical)^2) *alpha * times(i)) ;
+   fourier_loop_exp = fourier_loop_exp + bn_exp.*sin( lambda_n_exp*x_loc(j) ) * exp(- ((lambda_n_exp)^2) *alpha * times(i)) ;
+
 end
 
 
-     u_analytical_alum{j}{i,1} = double(T0_Alum + H_Alum_anal*x_loc(j) + fourier_loop);
+     u_analytical_alum{j}{i,1} = double(T0_Alum + H_Alum(1)*x_loc(j) + fourier_loop_analytical);
+     u_exp_alum{j}{i,1} = double(T0_Alum + H_Alum(2)*x_loc(j) + fourier_loop_exp);
 
             
     end
     
     
 end
-        
-           
+   
+figure(2)
+
+plot(times,cell2mat(u_analytical_alum{1}),'DisplayName','x0 - analytical','LineWidth',2)
+hold on
+for n = 2:9
     
-plot(times,cell2mat(u_analytical_alum{4}))
+plot(times,cell2mat(u_analytical_alum{n}),'DisplayName',[ 'TH' num2str(n) ' - analytical'],'LineWidth',2)
+
+end
+
+hold on
+
+plot(times,cell2mat(u_exp_alum{1}),'--','DisplayName','x0 - experimental','LineWidth',2)
+hold on
+for n = 2:9
+    
+plot(times,cell2mat(u_exp_alum{n}),'--','DisplayName',[ 'TH' num2str(n) ' - experimental'],'LineWidth',2)
+
+end
+
+title('Analytical and experimental temperature variation: Aluminum')
+xlabel('Time [s]')
+ylabel('temperature [C^o]')
+
+
+legend('Orientation','horizontal','NumColumns',3,'Location','SouthEast')
+grid minor
+
+% save plot
+ set(gcf, 'Position', get(0, 'Screensize'));
+ print(gcf,'figure2.png','-dpng','-r300');
+
+ %% repeate for Brass
+ 
+ syms n t
+alpha = 35.6e-5;
+
+times = linspace(time_Brass(1),time_Brass(end),30); % time array
+fourier_n = 20; % number  of fourier terms.
+
+x_loc = [ 0 loc ].*0.0254 ;
+
+
+for i = 1:length(times)
+    
+    for j = 1:length(x_loc)
+    
+            
+% lambda_n = ((2*(k)-1)*pi)/(2*L) ;
+% bn = ((-1).^(k) *8*H*L) / (( 2*(k) - 1) .^2 * pi^2);
+fourier_loop_analytical = 0;
+fourier_loop_exp = 0;
+
+for f = 1:fourier_n
+    
+lambda_n_analytical = ((2*(f)-1)*pi)/(2*L.*0.0254) ;
+bn_analytical = ((-1).^(f) *8*H_Brass(1)*L*0.0254) / (( 2*(f) - 1) .^2 * pi^2);
+
+lambda_n_exp = ((2*(f)-1)*pi)/(2*L.*0.0254) ;
+bn_exp = ((-1).^(f) *8*H_Brass(2)*L*0.0254) / (( 2*(f) - 1) .^2 * pi^2);
+
+   fourier_loop_analytical = fourier_loop_analytical + bn_analytical.*sin( lambda_n_analytical*x_loc(j) ) * exp(- ((lambda_n_analytical)^2) *alpha * times(i)) ;
+   fourier_loop_exp = fourier_loop_exp + bn_exp.*sin( lambda_n_exp*x_loc(j) ) * exp(- ((lambda_n_exp)^2) *alpha * times(i)) ;
+
+end
+
+
+     u_analytical_Brass{j}{i,1} = double(T0_Brass + H_Brass(1)*x_loc(j) + fourier_loop_analytical);
+     u_exp_Brass{j}{i,1} = double(T0_Brass + H_Brass(2)*x_loc(j) + fourier_loop_exp);
+
+            
+    end
+    
+    
+end
+   
+figure(3)
+
+plot(times,cell2mat(u_analytical_Brass{1}),'DisplayName','x0 - analytical','LineWidth',2)
+hold on
+for n = 2:9
+    
+plot(times,cell2mat(u_analytical_Brass{n}),'DisplayName',[ 'TH' num2str(n) ' - analytical'],'LineWidth',2)
+
+end
+
+hold on
+
+plot(times,cell2mat(u_exp_Brass{1}),'--','DisplayName','x0 - experimental','LineWidth',2)
+hold on
+for n = 2:9
+    
+plot(times,cell2mat(u_exp_Brass{n}),'--','DisplayName',[ 'TH' num2str(n) ' - experimental'],'LineWidth',2)
+
+end
+
+title('Analytical and experimental temperature variation: Brass')
+xlabel('Time [s]')
+ylabel('temperature [C^o]')
+
+
+legend('Orientation','horizontal','NumColumns',3,'Location','SouthEast')
+grid minor
+ylim([T0_Brass-4 T0_Brass+17])
+% save plot
+ set(gcf, 'Position', get(0, 'Screensize'));
+ print(gcf,'figure3.png','-dpng','-r300');
+
+ 
+ 
+ %% repeate for Steel
+ 
+ syms n t
+alpha = 4.05e-5;
+
+times = linspace(time_Steel(1),time_Steel(end),30); % time array
+fourier_n = 20; % number  of fourier terms.
+
+x_loc = [ 0 loc ].*0.0254 ;
+
+
+for i = 1:length(times)
+    
+    for j = 1:length(x_loc)
+    
+            
+% lambda_n = ((2*(k)-1)*pi)/(2*L) ;
+% bn = ((-1).^(k) *8*H*L) / (( 2*(k) - 1) .^2 * pi^2);
+fourier_loop_analytical = 0;
+fourier_loop_exp = 0;
+
+for f = 1:fourier_n
+    
+lambda_n_analytical = ((2*(f)-1)*pi)/(2*L.*0.0254) ;
+bn_analytical = ((-1).^(f) *8*H_Steel(1)*L*0.0254) / (( 2*(f) - 1) .^2 * pi^2);
+
+lambda_n_exp = ((2*(f)-1)*pi)/(2*L.*0.0254) ;
+bn_exp = ((-1).^(f) *8*H_Steel(2)*L*0.0254) / (( 2*(f) - 1) .^2 * pi^2);
+
+   fourier_loop_analytical = fourier_loop_analytical + bn_analytical.*sin( lambda_n_analytical*x_loc(j) ) * exp(- ((lambda_n_analytical)^2) *alpha * times(i)) ;
+   fourier_loop_exp = fourier_loop_exp + bn_exp.*sin( lambda_n_exp*x_loc(j) ) * exp(- ((lambda_n_exp)^2) *alpha * times(i)) ;
+
+end
+
+
+     u_analytical_Steel{j}{i,1} = double(T0_Steel + H_Steel(1)*x_loc(j) + fourier_loop_analytical);
+     u_exp_Steel{j}{i,1} = double(T0_Steel + H_Steel(2)*x_loc(j) + fourier_loop_exp);
+
+            
+    end
+    
+    
+end
+   
+figure(4)
+
+plot(times,cell2mat(u_analytical_Steel{1}),'DisplayName','x0 - analytical','LineWidth',2)
+hold on
+for n = 2:9
+    
+plot(times,cell2mat(u_analytical_Steel{n}),'DisplayName',[ 'TH' num2str(n) ' - analytical'],'LineWidth',2)
+
+end
+
+hold on
+
+plot(times,cell2mat(u_exp_Steel{1}),'--','DisplayName','x0 - experimental','LineWidth',2)
+hold on
+for n = 2:9
+    
+plot(times,cell2mat(u_exp_Steel{n}),'--','DisplayName',[ 'TH' num2str(n) ' - experimental'],'LineWidth',2)
+
+end
+
+title('Analytical and experimental temperature variation: Steel')
+xlabel('Time [s]')
+ylabel('temperature [C^o]')
+ylim([12 68])
+
+
+legend('Orientation','horizontal','NumColumns',3,'Location','SouthEast')
+grid minor
+
+% save plot
+ set(gcf, 'Position', get(0, 'Screensize'));
+ print(gcf,'figure4.png','-dpng','-r300');
