@@ -275,7 +275,7 @@ grid minor
  %% repeate for Brass
  
  syms n t
-alpha = 35.6e-5;
+alpha = 3.56e-5;
 
 times = linspace(time_Brass(1),time_Brass(end),30); % time array
 fourier_n = 20; % number  of fourier terms.
@@ -353,7 +353,7 @@ ylim([T0_Brass-4 T0_Brass+17])
  %% repeate for Steel
  
  syms n t
-alpha = 4.05e-5;
+alpha = 4.05e-6;
 
 times = linspace(time_Steel(1),time_Steel(end),30); % time array
 fourier_n = 20; % number  of fourier terms.
